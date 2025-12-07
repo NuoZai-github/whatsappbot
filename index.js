@@ -4,6 +4,19 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
 const googleTTS = require('google-tts-api');
 const axios = require('axios');
 const { createClient } = require('@supabase/supabase-js');
+const express = require('express'); // 引入 Express
+
+// --- 保活服务器 (适配 Render/Railway) ---
+const app = express();
+const port = process.env.PORT || 3000;
+
+app.get('/', (req, res) => {
+    res.send('WhatsApp Bot is running! 🚀');
+});
+
+app.listen(port, () => {
+    console.log(`Web server listening at http://localhost:${port}`);
+});
 
 // --- 配置区域 ---
 const API_KEY = "AIzaSyD7OCh4_RMe4-aIxLrBQ3ecRYyx1Qnjv-4"; // Gemini API Key
