@@ -10,8 +10,28 @@ const express = require('express'); // 引入 Express
 const app = express();
 const port = process.env.PORT || 3000;
 
+let lastQr = ""; // 存储最新的 QR 码字符串
+
 app.get('/', (req, res) => {
-    res.send('WhatsApp Bot is running! 🚀');
+    res.send('WhatsApp Bot is running! Go to <a href="/qr">/qr</a> to scan login code.');
+});
+
+app.get('/qr', (req, res) => {
+    if (!lastQr) {
+        return res.send('<h2>QR code not ready yet, please wait...</h2><script>setTimeout(() => location.reload(), 3000);</script>');
+    }
+    // 使用公开 API 将文本转换为二维码图片
+    const qrImgUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(lastQr)}`;
+    res.send(`
+        <html>
+            <head><meta http-equiv="refresh" content="5"></head>
+            <body style="display:flex; justify-content:center; align-items:center; height:100vh; flex-direction:column;">
+                <h1>WhatsApp Login</h1>
+                <img src="${qrImgUrl}" alt="QR Code" style="border: 2px solid black" />
+                <p>Refresh automatically every 5s</p>
+            </body>
+        </html>
+    `);
 });
 
 app.listen(port, () => {
@@ -43,6 +63,11 @@ const client = new Client({
 client.on('qr', (qr) => {
     console.log('请扫描下方的二维码登录 WhatsApp:');
     qrcode.generate(qr, { small: true });
+    lastQr = qr; // 保存 QR 码
+});
+
+client.on('ready', () => {
+    console.log('Bot 已成功上线！正在监听消息...');
 });
 
 // --- 数据库辅助函数 ---
@@ -295,5 +320,3 @@ Respond now:
         }
     }
 });
-console.log('正在启动 WhatsApp Bot...');
-client.initialize();
