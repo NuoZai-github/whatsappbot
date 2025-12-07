@@ -54,7 +54,9 @@ const model = genAI.getGenerativeModel({
 
 // 初始化 WhatsApp 客户端
 const client = new Client({
-    authStrategy: new LocalAuth(),
+    authStrategy: new LocalAuth(), // 尝试使用本地存储 Session
+    qrMaxRetries: 5,
+    authTimeoutMs: 60000,
     puppeteer: {
         headless: true,
         args: [
@@ -64,14 +66,34 @@ const client = new Client({
             '--disable-accelerated-2d-canvas',
             '--no-first-run',
             '--no-zygote',
+            '--single-process', // 尝试减少内存占用
             '--disable-gpu'
         ]
     }
 });
 
+// --- 详细调试日志 ---
+client.on('loading_screen', (percent, message) => {
+    console.log(`[WhatsApp] Loading: ${percent}% - ${message}`);
+});
+
+client.on('authenticated', () => {
+    console.log('[WhatsApp] Authenticated successfully!');
+});
+
+client.on('auth_failure', msg => {
+    console.error('[WhatsApp] Auth Failure:', msg);
+});
+
+client.on('disconnected', (reason) => {
+    console.log('[WhatsApp] Client disconnected:', reason);
+    // 掉线后重新初始化
+    client.initialize();
+});
+
 client.on('qr', (qr) => {
-    console.log('请扫描下方的二维码登录 WhatsApp:');
-    qrcode.generate(qr, { small: true });
+    console.log('请扫描下方的二维码登录 WhatsApp: (QR Received)');
+    // qrcode.generate(qr, { small: true }); // 云端日志可能不需要这个，保留也行
     lastQr = qr; // 保存 QR 码
 });
 
