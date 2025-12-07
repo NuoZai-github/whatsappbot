@@ -13,6 +13,10 @@ RUN apt-get update \
 # 设置工作目录
 WORKDIR /app
 
+# 设置环境变量，跳过 puppeteer 下载 chromium，直接用系统的
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
+    PUPPETEER_EXECUTABLE_PATH=/usr/bin/google-chrome-stable
+
 # 复制 package.json
 COPY package*.json ./
 
